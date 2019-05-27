@@ -18,6 +18,7 @@ namespace rabbitmq.helper.tools
         public IConnection CreateConn(RabbitMQConfig config)
         {
             ConnectionFactory factory = new ConnectionFactory();
+            factory.VirtualHost = config.VirtualHost;
             factory.HostName = config.HostName;
             factory.Password = config.Password;
             factory.Port = config.Port;

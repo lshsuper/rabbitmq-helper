@@ -23,7 +23,7 @@ namespace rabbitmq.helper.tools
         {
             _factory = new RabbitMQFactory();
         }
-       
+
         #region +Basic
         /// <summary>
         ///基础生产
@@ -36,22 +36,20 @@ namespace rabbitmq.helper.tools
             {
                 var currentConn = _factory.CreateConn(option.Config);
                 using (currentConn)
+                using (var currentChannel = _factory.CreateChannel(currentConn))
                 {
-                    var currentChannel = _factory.CreateChannel(currentConn);
-                    using (currentChannel)
-                    {
-                        currentChannel.QueueDeclare(queue: option.QueueName,
-                                     durable: false,
-                                     exclusive: false,
-                                     autoDelete: false,
-                                     arguments: null);
-                        currentChannel.BasicPublish(exchange: "",
-                                     routingKey: option.RoutingKey,
-                                     basicProperties: null,
-                                     body: Encoding.UTF8.GetBytes(option.Message));
+                    currentChannel.QueueDeclare(queue: option.QueueName,
+                                 durable: false,
+                                 exclusive: false,
+                                 autoDelete: false,
+                                 arguments: null);
+                    currentChannel.BasicPublish(exchange: "",
+                                 routingKey: option.RoutingKey,
+                                 basicProperties: null,
+                                 body: Encoding.UTF8.GetBytes(option.Message));
 
-                    }
                 }
+
                 return true;
             }
             catch (Exception ex)
@@ -67,33 +65,31 @@ namespace rabbitmq.helper.tools
         /// <param name="option"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-        public bool BaiscConsume(BasicQueueOption option,Func<string,bool>func)
+        public bool BaiscConsume(BasicQueueOption option, Func<string, bool> func)
         {
             try
             {
                 var currentConn = _factory.CreateConn(option.Config);
-                using (currentConn)
-                {
-                    var currentChannel = _factory.CreateChannel(currentConn);
-                    using (currentChannel)
-                    {
+
+                var currentChannel = _factory.CreateChannel(currentConn);
+
+
                         currentChannel.QueueDeclare(queue: option.QueueName,
                                      durable: false,
                                      exclusive: false,
                                      autoDelete: false,
                                      arguments: null);
-                        var consumer = new EventingBasicConsumer(currentChannel);
-                        consumer.Received += (model, ea) =>
-                        {
-                            var body = ea.Body;
-                            var message = Encoding.UTF8.GetString(body);
-                            func.Invoke(message);  //执行业务逻辑
+                var consumer = new EventingBasicConsumer(currentChannel);
+                consumer.Received += (model, ea) =>
+                {
+                    var body = ea.Body;
+                    var message = Encoding.UTF8.GetString(body);
+                    func.Invoke(message);  //执行业务逻辑
                         };
-                        currentChannel.BasicConsume(queue: option.QueueName,
-                                 autoAck: true,   
-                                 consumer: consumer);
-                    }
-                }
+                currentChannel.BasicConsume(queue: option.QueueName,
+                         autoAck: false,
+                         consumer: consumer);
+
                 return true;
             }
             catch (Exception ex)

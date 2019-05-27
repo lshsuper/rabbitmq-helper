@@ -18,15 +18,16 @@ namespace rabbitmq.helper.tools.option
         /// <summary>
         /// 虚拟主机名称
         /// </summary>
-        public string HostName { get; set; }
+        public string VirtualHost { get; set; } = "/";
+        public string HostName { get; set; } = "127.0.0.1";
         /// <summary>
         /// 用户名
         /// </summary>
-        public string UserName { get; set; }
+        public string UserName { get; set; } = "guest";
         /// <summary>
         /// 密码
         /// </summary>
-        public string Password { get; set; }
+        public string Password { get; set; } = "guest";
         /// <summary>
         /// 是否自动连接
         /// </summary>
@@ -34,11 +35,11 @@ namespace rabbitmq.helper.tools.option
         /// <summary>
         /// 连接名称
         /// </summary>
-        public string ConnName { get; set; }
+        public string ConnName { get; set; } = "conn_" + Guid.NewGuid().ToString("N");
         /// <summary>
         /// 端口号
         /// </summary>
-        public int Port { get; set; }
+        public int Port { get; set; } = 5672;
 
     }
 }

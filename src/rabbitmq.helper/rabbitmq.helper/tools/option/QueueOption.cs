@@ -15,7 +15,7 @@ namespace rabbitmq.helper.tools.option
             Config = new RabbitMQConfig();
         }
         public string QueueName { get; set; }
-        public string RoutingKey { get; set; }
+        public string RoutingKey { get; set; } =string.Empty;
 
     }
 }
