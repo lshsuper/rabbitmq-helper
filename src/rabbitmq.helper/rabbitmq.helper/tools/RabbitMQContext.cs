@@ -36,20 +36,22 @@ namespace rabbitmq.helper.tools
             {
                 var currentConn = _factory.CreateConn(option.Config);
                 using (currentConn)
-                using (var currentChannel = _factory.CreateChannel(currentConn))
                 {
-                    currentChannel.QueueDeclare(queue: option.QueueName,
-                                 durable: false,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
-                    currentChannel.BasicPublish(exchange: "",
-                                 routingKey: option.RoutingKey,
-                                 basicProperties: null,
-                                 body: Encoding.UTF8.GetBytes(option.Message));
+                    var currentChannel = _factory.CreateChannel(currentConn);
+                    using (currentChannel)
+                    {
+                        currentChannel.QueueDeclare(queue: option.QueueName,
+                                     durable: false,
+                                     exclusive: false,
+                                     autoDelete: false,
+                                     arguments: null);
+                        currentChannel.BasicPublish(exchange: "",
+                                     routingKey: option.RoutingKey,
+                                     basicProperties: null,
+                                     body: Encoding.UTF8.GetBytes(option.Message));
 
+                    }
                 }
-
                 return true;
             }
             catch (Exception ex)
@@ -73,12 +75,11 @@ namespace rabbitmq.helper.tools
 
                 var currentChannel = _factory.CreateChannel(currentConn);
 
-
-                        currentChannel.QueueDeclare(queue: option.QueueName,
-                                     durable: false,
-                                     exclusive: false,
-                                     autoDelete: false,
-                                     arguments: null);
+                currentChannel.QueueDeclare(queue: option.QueueName,
+                             durable: false,
+                             exclusive: false,
+                             autoDelete: false,
+                             arguments: null);
                 var consumer = new EventingBasicConsumer(currentChannel);
                 consumer.Received += (model, ea) =>
                 {
@@ -87,8 +88,9 @@ namespace rabbitmq.helper.tools
                     func.Invoke(message);  //执行业务逻辑
                         };
                 currentChannel.BasicConsume(queue: option.QueueName,
-                         autoAck: false,
+                         autoAck: true,
                          consumer: consumer);
+
 
                 return true;
             }
@@ -99,5 +101,75 @@ namespace rabbitmq.helper.tools
         }
         #endregion
 
+        #region +High
+        public bool HighPublish(HighQueueOption option)
+        {
+
+            try
+            {
+                using (var connection = _factory.CreateConn(option.Config))
+                using (var channel = _factory.CreateChannel(connection))
+                {
+                    channel.ExchangeDeclare(exchange: option.ExchangeName, type: option.ExchangeType);
+
+
+                    var body = Encoding.UTF8.GetBytes(option.Message);
+                    channel.BasicPublish(exchange: option.ExchangeName,
+                                         routingKey: option.RoutingKey,
+                                         basicProperties: null,
+                                         body: body);
+
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+        }
+        public bool HighConsume(HighQueueOption option, Func<string, bool> func)
+        {
+
+            try
+            {
+                var connection = _factory.CreateConn(option.Config);
+                var channel = _factory.CreateChannel(connection);
+
+                channel.ExchangeDeclare(exchange: option.ExchangeName, type: option.ExchangeType);
+
+                var queueName = channel.QueueDeclare().QueueName;
+                channel.QueueBind(queue: queueName,
+                                  exchange: option.ExchangeName,
+                                  routingKey: option.RoutingKey);
+
+
+
+                var consumer = new EventingBasicConsumer(channel);
+                consumer.Received += (model, ea) =>
+                {
+                    var body = ea.Body;
+                    var message = Encoding.UTF8.GetString(body);
+                    func.Invoke(message);
+                };
+                channel.BasicConsume(queue: queueName,
+                                     autoAck: true,
+                                     consumer: consumer);
+                return true;
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+
+            }
+            #endregion
+            #region +Common
+            public void Close(string conn,string channelName)
+        {
+
+        }
+        #endregion
     }
 }

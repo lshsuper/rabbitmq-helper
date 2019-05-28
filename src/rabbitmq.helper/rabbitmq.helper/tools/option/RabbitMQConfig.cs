@@ -19,7 +19,7 @@ namespace rabbitmq.helper.tools.option
         /// 虚拟主机名称
         /// </summary>
         public string VirtualHost { get; set; } = "/";
-        public string HostName { get; set; } = "127.0.0.1";
+        public string HostName { get; set; } = "localhost";
         /// <summary>
         /// 用户名
         /// </summary>

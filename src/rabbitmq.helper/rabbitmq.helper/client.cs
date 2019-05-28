@@ -25,21 +25,30 @@ namespace rabbitmq.helper
         private void Form1_Load(object sender, EventArgs e)
         {
             //示例
-            RabbitMQHelper.Instance.BaiscConsume(new tools.option.BasicQueueOption() {
-                  QueueName="ceshi2",
-                  Config=new tools.option.RabbitMQConfig() {
-                      VirtualHost= "/lsh-blog"
-                  }
-            },(msg)=> {
-
-                lv_show.Items.Add(msg);
+            RabbitMQHelper.Instance.BaiscConsume(new tools.option.BasicQueueOption()
+            {
+                QueueName = "ceshi9",
+                Config = new tools.option.RabbitMQConfig()
+                {
+                    VirtualHost = "/lsh-blog"
+                }
+            }, (msg) =>
+            {
+                BeginInvoke(new Action(()=> {
+                    lv_show.Items.Add(msg);
+                }));
+                 
                 return true;
             });
         }
 
         private void Btn_send_Click(object sender, EventArgs e)
         {
-            RabbitMQHelper.Instance.BasicPublish(new tools.option.BasicQueueOption() {, QueueName="ceshi2",Message=tb_msg.Text,
+            RabbitMQHelper.Instance.BasicPublish(new tools.option.BasicQueueOption()
+            {
+                QueueName = "ceshi9",
+                Message = tb_msg.Text,
+                RoutingKey="ceshi9",
                 Config = new tools.option.RabbitMQConfig()
                 {
                     VirtualHost = "/lsh-blog"
